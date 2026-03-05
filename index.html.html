@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcGIS JS Course</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;0,900;1,300;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --earth:#1a3a2a;--earth-mid:#234d38;
+  --leaf:#4caf72;--leaf-bright:#5dcc84;
+  --sand:#f5e6c8;--white:#fefdf8;--card:#f9f6ed;--border:#d8cdb0;
+  --text:#1a2818;--text-mid:#3d5c3a;--text-light:#6b8f6a;
+  --gold:#e8a030;--sidebar:244px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);display:flex;height:100vh;overflow:hidden;}
+#sidebar{width:var(--sidebar);flex-shrink:0;background:var(--earth);display:flex;flex-direction:column;overflow:hidden;transition:width .3s;z-index:100;}
+#sidebar.collapsed{width:56px;}
+.sb-logo{padding:16px 14px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.sb-logo-icon{width:30px;height:30px;background:var(--leaf);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sb-logo-text{font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;}
+.sb-logo-text span{display:block;font-size:10px;font-weight:300;opacity:.5;font-family:'DM Sans',sans-serif;margin-top:1px;}
+.sb-toggle{margin:8px 8px 0;padding:7px;border-radius:7px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;font-size:15px;width:calc(100% - 16px);}
+.sb-toggle:hover{background:rgba(255,255,255,.12);}
+.sb-section{padding:14px 12px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;}
+#sidebar.collapsed .sb-section{visibility:hidden;}
+.sb-lessons{flex:1;overflow-y:auto;padding:0 6px 12px;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px;border-radius:9px;margin-bottom:2px;cursor:pointer;transition:background .15s;border:1.5px solid transparent;}
+.sb-item:hover{background:rgba(255,255,255,.07);}
+.sb-item.active{background:rgba(77,175,114,.15);border-color:rgba(77,175,114,.3);}
+.sb-item.active .sb-num{background:var(--leaf);color:white;}
+.sb-num{width:26px;height:26px;border-radius:6px;flex-shrink:0;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;}
+.sb-done .sb-num{background:rgba(77,175,114,.25);color:var(--leaf-bright);}
+.sb-info{overflow:hidden;}
+.sb-title{font-size:12px;font-weight:500;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-meta{font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;}
+#sidebar.collapsed .sb-info,#sidebar.collapsed .sb-section{display:none;}
+.sb-progress-bar{flex-shrink:0;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);}
+.sb-prog-label{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px;display:flex;justify-content:space-between;}
+.sb-prog-track{height:3px;background:rgba(255,255,255,.08);border-radius:3px;}
+.sb-prog-fill{height:100%;background:var(--leaf);border-radius:3px;transition:width .4s;}
+#sidebar.collapsed .sb-progress-bar{display:none;}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:12px 24px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.topbar-bc{font-size:13px;color:var(--text-light);}
+.topbar-bc strong{color:var(--earth);font-weight:600;}
+.topbar-spacer{flex:1;}
+.tbtn{padding:6px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:12.5px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .15s;}
+.tbtn:hover{border-color:var(--leaf);}
+.tbtn.primary{background:var(--earth);color:var(--white);border-color:var(--earth);}
+.tbtn:disabled{opacity:.3;cursor:not-allowed;}
+#content{flex:1;overflow-y:auto;padding:36px 44px 80px;}
+#content::-webkit-scrollbar{width:5px;}
+#content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* lesson styles */
+.lhero{background:var(--earth);border-radius:16px;padding:36px 40px 32px;position:relative;overflow:hidden;margin-bottom:32px;}
+.lhero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(77,175,114,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(77,175,114,.07) 1px,transparent 1px);background-size:30px 30px;}
+.lbadge{display:inline-flex;align-items:center;gap:6px;background:rgba(77,175,114,.18);border:1px solid rgba(77,175,114,.3);border-radius:18px;padding:4px 12px 4px 8px;font-size:10.5px;font-weight:500;color:var(--leaf-bright);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;position:relative;z-index:1;}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--leaf-bright);animation:breathe 2.5s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.5);opacity:.5;}}
+.lhero h1{font-family:'Fraunces',serif;font-size:34px;font-weight:900;color:var(--white);line-height:1.1;margin-bottom:10px;position:relative;z-index:1;}
+.lhero h1 em{color:var(--leaf-bright);font-style:italic;}
+.lhero-sub{font-size:14px;color:rgba(254,253,248,.6);font-weight:300;position:relative;z-index:1;max-width:480px;line-height:1.6;}
+.lpills{display:flex;gap:7px;margin-top:16px;flex-wrap:wrap;position:relative;z-index:1;}
+.pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:3px 10px;font-size:11px;color:rgba(254,253,248,.6);}
+h2{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--earth);margin:28px 0 10px;line-height:1.2;}
+h3{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--earth-mid);margin:22px 0 8px;}
+p{margin-bottom:13px;line-height:1.75;}
+.divider{height:1px;background:var(--border);margin:32px 0;position:relative;}
+.divider::after{content:'◆';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);color:var(--border);padding:0 10px;font-size:9px;}
+.box{border-radius:11px;padding:16px 20px;margin:16px 0;}
+.box p{margin:0;font-size:13.5px;line-height:1.7;}
+.box p+p{margin-top:8px;}
+.box::before{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+.box-a{background:#fef9f0;border:1.5px solid #f0d990;}.box-a::before{content:'💡 Analogy';color:#b07a10;}
+.box-k{background:#f0faf3;border:1.5px solid #a8ddb8;}.box-k::before{content:'🔑 Key Concept';color:#2a7a42;}
+.box-r{background:#f0f6ff;border:1.5px solid #a8c8f0;}.box-r::before{content:'🌍 Real World';color:#1a5a9a;}
+.box-w{background:#fff4f0;border:1.5px solid #f0b0a0;}.box-w::before{content:'⚠️ Important';color:#a03020;}
+.box-t{background:#f8f0ff;border:1.5px solid #d0a8f0;}.box-t::before{content:'💜 Pro Tip';color:#6a2a9a;}
+.codeblock{background:#1a2818;border-radius:11px;padding:18px 20px;margin:16px 0;overflow-x:auto;}
+.codeblock .clabel{font-size:10px;color:rgba(168,221,184,.35);font-family:'DM Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+.codeblock pre{color:#a8ddb8;font-family:'DM Mono',monospace;font-size:12.5px;line-height:1.75;white-space:pre;margin:0;}
+.kw{color:#5dcc84;}.str{color:#f5d090;}.cm{color:rgba(168,221,184,.38);font-style:italic;}.fn{color:#7dd3fc;}.num{color:#f0a8a8;}
+.glossary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+.tc{background:var(--card);border:1.5px solid var(--border);border-radius:9px;padding:12px 14px;transition:border-color .2s,transform .2s;}
+.tc:hover{border-color:var(--leaf);transform:translateY(-2px);}
+.tw{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:500;color:var(--leaf);background:#f0faf3;border:1px solid #a8ddb8;border-radius:5px;padding:2px 8px;display:inline-block;margin-bottom:6px;}
+.td{font-size:13px;color:var(--text-mid);line-height:1.55;}
+.steps{margin:16px 0;}
+.step{display:flex;gap:12px;margin-bottom:14px;}
+.sbullet{width:30px;height:30px;background:var(--earth);color:var(--sand);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:13px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.sbody h4{font-weight:600;font-size:13.5px;color:var(--earth);margin-bottom:3px;}
+.sbody p{font-size:13px;color:var(--text-mid);margin:0;}
+.twrap{overflow-x:auto;border-radius:9px;border:1.5px solid var(--border);margin:14px 0;}
+table{width:100%;border-collapse:collapse;}
+th{background:var(--earth);color:var(--sand);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:10px 13px;text-align:left;}
+td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+tr:last-child td{border-bottom:none;}
+tr:nth-child(even) td{background:var(--card);}
+td:first-child{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--leaf);font-weight:500;}
+.sumbox{background:var(--earth);color:var(--white);border-radius:13px;padding:22px 26px;margin:28px 0 20px;}
+.sumbox-title{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--leaf-bright);margin-bottom:10px;}
+.sumbox ul{padding-left:15px;}
+.sumbox li{font-size:13px;color:rgba(254,253,248,.8);margin-bottom:6px;line-height:1.6;}
+.sumbox li strong{color:var(--leaf-bright);}
+.practice{background:linear-gradient(135deg,var(--earth),var(--earth-mid));color:var(--white);border-radius:14px;padding:24px 28px;margin:24px 0 0;position:relative;overflow:hidden;}
+.practice::before{content:'✏️';position:absolute;right:24px;top:24px;font-size:36px;opacity:.2;}
+.ptag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--leaf-bright);margin-bottom:7px;}
+.practice h2{font-size:20px;color:var(--white);margin:0 0 10px;}
+.practice p{color:rgba(254,253,248,.7);font-size:13px;margin-bottom:9px;}
+.practice ol{padding-left:16px;}
+.practice li{color:rgba(254,253,248,.8);font-size:13px;margin-bottom:7px;line-height:1.6;}
+.practice li strong{color:var(--leaf-bright);}
+.pnote{margin-top:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:10px 14px;font-size:12.5px;color:rgba(254,253,248,.6);}
+.cbtn{display:block;width:100%;margin-top:24px;padding:14px;background:var(--leaf);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.cbtn:hover{background:var(--leaf-bright);}
+.cbtn.done{background:rgba(77,175,114,.15);color:var(--leaf);border:1.5px solid var(--leaf);cursor:default;}
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+.comp-card{border-radius:11px;padding:16px 18px;border:1.5px solid;}
+.comp-v{background:#f0faf3;border-color:#a8ddb8;}.comp-r{background:#f0f6ff;border-color:#a8c8f0;}
+.comp-title{font-size:13px;font-weight:700;margin-bottom:7px;}
+.comp-v .comp-title{color:#2a7a42;}.comp-r .comp-title{color:#1a5a9a;}
+.comp-card ul{padding-left:13px;}
+.comp-card li{font-size:12.5px;color:var(--text-mid);margin-bottom:4px;line-height:1.5;}
+.flow{display:flex;align-items:center;overflow-x:auto;padding:4px 0;margin:18px 0;}
+.fstep{flex-shrink:0;text-align:center;width:100px;}
+.ficon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 7px;box-shadow:0 3px 10px rgba(0,0,0,.09);}
+.fi1{background:linear-gradient(135deg,#e8f4fd,#b8dcf0);}
+.fi2{background:linear-gradient(135deg,#fef3e0,#f5d090);}
+.fi3{background:linear-gradient(135deg,#e8f8ee,#a8ddb8);}
+.fi4{background:linear-gradient(135deg,#fde8e8,#f0a8a8);}
+.ftext{font-size:11px;font-weight:600;color:var(--text-mid);line-height:1.3;}
+.farrow{flex-shrink:0;font-size:18px;color:var(--border);padding:0 2px;padding-bottom:18px;}
+.layers-stack{display:inline-flex;flex-direction:column-reverse;}
+.ml{width:270px;height:44px;border-radius:7px;display:flex;align-items:center;padding:0 14px;font-size:12px;font-weight:500;color:white;margin-top:-6px;box-shadow:0 3px 10px rgba(0,0,0,.15);cursor:default;transition:transform .2s;}
+.ml:hover{transform:translateX(8px);z-index:10;}
+.ml:first-child{margin-top:0;}
+.l1{background:linear-gradient(90deg,#2b6cb0,#3182ce);}
+.l2{background:linear-gradient(90deg,#276749,#38a169);}
+.l3{background:linear-gradient(90deg,#744210,#975a16);}
+.l4{background:linear-gradient(90deg,#1a3a2a,#234d38);}
+.llbl{font-size:9px;opacity:.65;margin-left:auto;font-family:'DM Mono',monospace;}
+.dwrap{background:var(--card);border:1.5px solid var(--border);border-radius:13px;padding:22px;margin:18px 0;text-align:center;}
+.dtitle{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--text-light);margin-bottom:16px;}
+/* home */
+.home-hero{text-align:center;padding:36px 0 28px;}
+.home-hero h1{font-family:'Fraunces',serif;font-size:38px;font-weight:900;color:var(--earth);margin-bottom:10px;}
+.home-hero h1 em{color:var(--leaf);}
+.home-hero p{font-size:15px;color:var(--text-mid);max-width:460px;margin:0 auto;}
+.stat-row{display:flex;gap:14px;justify-content:center;margin-top:18px;flex-wrap:wrap;}
+.stat-box{background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:12px 20px;text-align:center;}
+.snum{font-family:'Fraunces',serif;font-size:26px;font-weight:900;color:var(--earth);}
+.snum.g{color:var(--leaf);}.snum.gold{color:var(--gold);}
+.slabel{font-size:11px;color:var(--text-light);}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:28px;}
+.lcard{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;gap:12px;align-items:flex-start;}
+.lcard:hover{border-color:var(--leaf);transform:translateY(-2px);box-shadow:0 5px 16px rgba(0,0,0,.07);}
+.lcard.done{border-color:rgba(77,175,114,.4);background:#f5fbf6;}
+.lcnum{width:34px;height:34px;background:var(--earth);color:var(--sand);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:14px;font-weight:700;flex-shrink:0;}
+.lcard.done .lcnum{background:var(--leaf);color:white;}
+.lctitle{font-weight:600;font-size:13.5px;color:var(--earth);margin-bottom:3px;}
+.lcdesc{font-size:12px;color:var(--text-light);line-height:1.4;}
+.lcmeta{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap;}
+.lctag{font-size:10px;background:var(--white);border:1px solid var(--border);border-radius:9px;padding:2px 7px;color:var(--text-light);}
+.lcard.done .lctag{background:#f0faf3;border-color:#a8ddb8;color:var(--leaf);}
+code{background:#f0faf3;border:1px solid #a8ddb8;border-radius:4px;padding:1px 6px;font-family:'DM Mono',monospace;font-size:11.5px;color:#1a6a38;}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">🗺</div>
+    <div class="sb-logo-text">ArcGIS JS Dev<span>Full Course · 10 Lessons</span></div>
+  </div>
+  <button class="sb-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="sb-lessons" id="sbLessons"></div>
+  <div class="sb-progress-bar">
+    <div class="sb-prog-label"><span>Progress</span><span id="progPct">0%</span></div>
+    <div class="sb-prog-track"><div class="sb-prog-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-bc" id="breadcrumb">ArcGIS JS Dev Course</div>
+    <div class="topbar-spacer"></div>
+    <button class="tbtn" id="btnPrev" onclick="navigate(-1)" disabled>← Prev</button>
+    <button class="tbtn primary" id="btnNext" onclick="navigate(1)">Next →</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<script>
+var current = 0;
+var completed = new Set();
+try { completed = new Set(JSON.parse(localStorage.getItem('gis_done')||'[]')); } catch(e){}
+
+var LESSONS = [
+  {id:0,title:"Course Home",short:"Home",time:"",section:""},
+  {id:1,title:"What is GIS?",short:"What is GIS?",time:"20 min",section:"Section 1 · GIS Basics",tags:["Beginner","No code"]},
+  {id:2,title:"Vector, Raster & Projections",short:"Vector & Raster",time:"25 min",section:"Section 1 · GIS Basics",tags:["Beginner","Visual"]},
+  {id:3,title:"Intro to ArcGIS Maps SDK",short:"ArcGIS SDK Intro",time:"20 min",section:"Section 2 · SDK Setup",tags:["Setup"]},
+  {id:4,title:"Your First Map",short:"First Map",time:"30 min",section:"Section 2 · SDK Setup",tags:["Code","HTML/JS"]},
+  {id:5,title:"Adding Layers",short:"Adding Layers",time:"30 min",section:"Section 2 · SDK Setup",tags:["Code"]},
+  {id:6,title:"Popups & Attributes",short:"Popups",time:"25 min",section:"Section 3 · Interactivity",tags:["Code","Interactive"]},
+  {id:7,title:"Querying Features",short:"Queries",time:"30 min",section:"Section 3 · Interactivity",tags:["Code","Data"]},
+  {id:8,title:"Symbols & Renderers",short:"Renderers",time:"25 min",section:"Section 3 · Interactivity",tags:["Code","Styling"]},
+  {id:9,title:"3D SceneView",short:"3D Maps",time:"30 min",section:"Section 4 · Advanced",tags:["Code","3D"]},
+  {id:10,title:"Final Project",short:"Final Project",time:"60 min",section:"Section 4 · Advanced",tags:["Project","Capstone"]}
+];
+
+function goTo(id){
+  if(id<0||id>=LESSONS.length) return;
+  current=id;
+  renderSidebar();
+  document.getElementById('content').innerHTML = getContent(id);
+  updateTopbar();
+  document.getElementById('content').scrollTo(0,0);
+}
+function navigate(dir){ goTo(current+dir); }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('collapsed'); }
+function markDone(id){
+  completed.add(id);
+  try{localStorage.setItem('gis_done',JSON.stringify([...completed]));}catch(e){}
+  renderSidebar();
+  var btn=document.getElementById('cbtn');
+  if(btn){btn.textContent='✓ Lesson '+id+' Complete';btn.classList.add('done');btn.disabled=true;}
+}
+
+function renderSidebar(){
+  var el=document.getElementById('sbLessons'), lastSec='', html='';
+  LESSONS.forEach(function(l){
+    if(!l.id) return;
+    if(l.section!==lastSec){lastSec=l.section;html+='<div class="sb-section">'+l.section+'</div>';}
+    var isDone=completed.has(l.id);
+    html+='<div class="sb-item'+(current===l.id?' active':'')+(isDone?' sb-done':'')+'" onclick="goTo('+l.id+')">'
+      +'<div class="sb-num">'+(isDone?'✓':l.id)+'</div>'
+      +'<div class="sb-info"><div class="sb-title">'+l.short+'</div><div class="sb-meta">'+l.time+'</div></div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+  var pct=Math.round((completed.size/10)*100);
+  document.getElementById('progPct').textContent=pct+'%';
+  document.getElementById('progFill').style.width=pct+'%';
+}
+function updateTopbar(){
+  var l=LESSONS[current];
+  document.getElementById('breadcrumb').innerHTML=current===0
+    ?'ArcGIS JS Dev Course'
+    :'<span style="opacity:.5">Course</span> → <strong>'+l.title+'</strong>';
+  document.getElementById('btnPrev').disabled=current<=0;
+  document.getElementById('btnNext').disabled=current>=LESSONS.length-1;
+}
+
+/* ── helpers ── */
+function hero(num,sec,t,sub,pills){
+  return '<div class="lhero"><div class="lhero-grid"></div>'
+    +'<div class="lbadge"><div class="bdot"></div>Lesson '+num+' · '+sec+'</div>'
+    +'<h1>'+t+'</h1><p class="lhero-sub">'+sub+'</p>'
+    +'<div class="lpills">'+pills.map(function(p){return '<div class="pill">'+p+'</div>';}).join('')+'</div>'
+    +'</div>';
+}
+function cbtn(id){
+  var done=completed.has(id);
+  return '<button id="cbtn" class="cbtn'+(done?' done':'')+'" '+(done?'disabled':'')+' onclick="markDone('+id+')">'
+    +(done?'✓ Lesson '+id+' Complete':'Mark Lesson '+id+' as Complete ✓')
+    +'</button>';
+}
+function sumbox(items){
+  return '<div class="sumbox"><div class="sumbox-title">✅ Lesson Summary</div><ul>'
+    +items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul></div>';
+}
+function code(label, lines){
+  return '<div class="codeblock"><div class="clabel">'+label+'</div><pre>'+lines+'</pre></div>';
+}
+/* escape helper so code strings don't break HTML */
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── content router ── */
+function getContent(id){
+  switch(id){
+    case 0: return c0();
+    case 1: return c1();
+    case 2: return c2();
+    case 3: return c3();
+    case 4: return c4();
+    case 5: return c5();
+    case 6: return c6();
+    case 7: return c7();
+    case 8: return c8();
+    case 9: return c9();
+    case 10: return c10();
+    default: return '<p>Not found</p>';
+  }
+}
+
+/* ══════════════════════════════════════════════
+   HOME
+══════════════════════════════════════════════ */
+function c0(){
+  var cards='';
+  LESSONS.forEach(function(l){
+    if(!l.id) return;
+    var done=completed.has(l.id);
+    cards+='<div class="lcard'+(done?' done':'')+'" onclick="goTo('+l.id+')">'
+      +'<div class="lcnum">'+(done?'✓':l.id)+'</div>'
+      +'<div><div class="lctitle">'+l.title+'</div>'
+      +'<div class="lcdesc">'+l.section+'</div>'
+      +'<div class="lcmeta"><span class="lctag">🕐 '+l.time+'</span>'
+      +(l.tags||[]).map(function(t){return '<span class="lctag">'+t+'</span>';}).join('')
+      +'</div></div></div>';
+  });
+  return '<div class="home-hero">'
+    +'<h1>Learn <em>ArcGIS JS</em><br>Development</h1>'
+    +'<p>A complete beginner-to-pro course. Master GIS concepts then build real interactive web mapping apps.</p>'
+    +'<div class="stat-row">'
+    +'<div class="stat-box"><div class="snum">10</div><div class="slabel">Lessons</div></div>'
+    +'<div class="stat-box"><div class="snum g">'+completed.size+'</div><div class="slabel">Completed</div></div>'
+    +'<div class="stat-box"><div class="snum gold">~5h</div><div class="slabel">Total Time</div></div>'
+    +'</div></div>'
+    +'<div class="lgrid">'+cards+'</div>';
+}
+
+/* ══════════════════════════════════════════════
+   L1 — What is GIS
+══════════════════════════════════════════════ */
+function c1(){
+  return hero(1,'Section 1','What is <em>GIS</em> &amp;<br>How Web Maps Work',
+    'Your journey into GIS starts here. No prior experience needed — concepts first, code second.',
+    ['🕐 20 min','🎯 Beginner','🗺 No code yet'])
+  +'<h2>What is GIS?</h2>'
+  +'<p>GIS stands for <strong>Geographic Information System</strong> — a system that connects data to locations on Earth so you can visualize and analyze it on a map.</p>'
+  +'<div class="glossary">'
+  +'<div class="tc"><div class="tw">Geographic</div><div class="td">Anything related to the Earth\'s surface — locations, cities, rivers, roads.</div></div>'
+  +'<div class="tc"><div class="tw">Information</div><div class="td">Data about those places — population counts, speed limits, hospital names.</div></div>'
+  +'<div class="tc"><div class="tw">System</div><div class="td">Software that helps collect, store, analyze and display geographic information.</div></div>'
+  +'<div class="tc"><div class="tw">Together</div><div class="td">A tool that <strong>connects data to locations</strong> so you can see it visually on a map.</div></div>'
+  +'</div>'
+  +'<div class="box box-a"><p>Imagine a paper map of your city that shows roads — but nothing else. Now imagine it also shows which buildings are hospitals, neighborhood population, and real-time traffic. <strong>That\'s GIS.</strong></p></div>'
+  +'<div class="divider"></div>'
+  +'<h2>Maps are Made of Layers</h2>'
+  +'<p>Think of layers like transparent sheets stacked on each other. Each sheet shows one type of information.</p>'
+  +'<div class="dwrap"><div class="dtitle">How Layers Stack in a GIS Map</div>'
+  +'<div class="layers-stack">'
+  +'<div class="ml l4"><span style="margin-right:8px">🛰</span>Satellite Basemap<span class="llbl">Layer 0</span></div>'
+  +'<div class="ml l3"><span style="margin-right:8px">🛣</span>Roads &amp; Streets<span class="llbl">Layer 1</span></div>'
+  +'<div class="ml l2"><span style="margin-right:8px">🏥</span>Hospitals<span class="llbl">Layer 2</span></div>'
+  +'<div class="ml l1"><span style="margin-right:8px">📍</span>Your Location<span class="llbl">Layer 3</span></div>'
+  +'</div><p style="font-size:11px;color:#aaa;margin-top:10px;">↑ Hover to highlight each layer</p></div>'
+  +'<div class="divider"></div>'
+  +'<h2>Coordinates — Earth\'s Address System</h2>'
+  +'<p>Every location on Earth has a unique <strong>coordinate</strong> — a Latitude (N/S) and Longitude (E/W) pair.</p>'
+  +'<div class="box box-w"><p><strong>ArcGIS SDK uses [Longitude, Latitude] order</strong> — longitude first! This is the opposite of Google Maps. It\'s the #1 beginner mistake. Remember: <strong>Longitude first in ArcGIS.</strong></p></div>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>City</th><th>Latitude</th><th>Longitude</th><th>ArcGIS format</th></tr>'
+  +'<tr><td>New York</td><td>40.71° N</td><td>74.00° W</td><td>[-74.00, 40.71]</td></tr>'
+  +'<tr><td>London</td><td>51.50° N</td><td>0.12° W</td><td>[-0.12, 51.50]</td></tr>'
+  +'<tr><td>Tokyo</td><td>35.68° N</td><td>139.69° E</td><td>[139.69, 35.68]</td></tr>'
+  +'<tr><td>Sydney</td><td>33.86° S</td><td>151.20° E</td><td>[151.20, -33.86]</td></tr>'
+  +'</table></div>'
+  +'<div class="divider"></div>'
+  +'<h2>How Web Maps Work</h2>'
+  +'<div class="flow">'
+  +'<div class="fstep"><div class="ficon fi1">🗄️</div><div class="ftext">GIS Server<br>stores data</div></div>'
+  +'<div class="farrow">→</div>'
+  +'<div class="fstep"><div class="ficon fi2">📡</div><div class="ftext">SDK requests<br>tiles + data</div></div>'
+  +'<div class="farrow">→</div>'
+  +'<div class="fstep"><div class="ficon fi3">📦</div><div class="ftext">Tiles arrive<br>in browser</div></div>'
+  +'<div class="farrow">→</div>'
+  +'<div class="fstep"><div class="ficon fi4">🖥️</div><div class="ftext">Browser draws<br>the map</div></div>'
+  +'</div>'
+  +'<div class="box box-k"><p>The world map is pre-cut into small <strong>tiles</strong> (256×256px image squares). As you pan and zoom, the browser requests only the tiles it needs. On top of tiles, <strong>feature data</strong> (points/lines/polygons + attributes) is overlaid.</p></div>'
+  +sumbox([
+    '<strong>GIS</strong> = system connecting data to locations on Earth',
+    'Maps = <strong>stacked layers</strong>, each showing different data',
+    'Every location has a <strong>coordinate</strong> (Latitude + Longitude)',
+    'In ArcGIS SDK, always write <strong>[Longitude, Latitude]</strong> — longitude first!',
+    'Web maps use <strong>tiles</strong> (image squares) + <strong>feature data</strong> (vector shapes + attributes)'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Think Like a GIS Developer</h2>'
+  +'<ol><li><strong>Layers:</strong> List 5 layers you\'d want on a map of your neighborhood.</li>'
+  +'<li><strong>Coordinates:</strong> Open Google Maps, right-click → "What\'s here?" Note the lat/long, then flip to [lon, lat].</li>'
+  +'<li><strong>Tiles:</strong> On Google Maps zoom all the way in then out — watch the detail change.</li>'
+  +'<li><strong>Features:</strong> Click any restaurant on Google Maps. Identify its geometry and attributes.</li></ol>'
+  +'<div class="pnote">💬 No code yet — that starts in Lesson 4!</div></div>'
+  +cbtn(1);
+}
+
+/* ══════════════════════════════════════════════
+   L2 — Vector, Raster & Projections
+══════════════════════════════════════════════ */
+function c2(){
+  return hero(2,'Section 1','<em>Vector, Raster</em><br>&amp; Map Projections',
+    'The two fundamental types of geographic data, and why the Earth looks distorted on flat maps.',
+    ['🕐 25 min','🎯 Beginner','📐 Visual'])
+  +'<h2>Two Types of GIS Data</h2>'
+  +'<div class="comparison">'
+  +'<div class="comp-card comp-v"><div class="comp-title">🔷 Vector Data</div><ul>'
+  +'<li>Made of <strong>points, lines, polygons</strong></li><li>Mathematically precise coordinates</li>'
+  +'<li>Scales perfectly to any zoom</li><li>Each shape has <strong>attributes</strong></li>'
+  +'<li>Roads, buildings, boundaries</li></ul></div>'
+  +'<div class="comp-card comp-r"><div class="comp-title">🖼 Raster Data</div><ul>'
+  +'<li>Made of a <strong>grid of pixels/cells</strong></li><li>Each cell holds a value</li>'
+  +'<li>Gets blurry if zoomed too far</li><li>Great for <strong>continuous data</strong></li>'
+  +'<li>Satellite photos, elevation, temperature</li></ul></div></div>'
+  +'<div class="box box-a"><p><strong>Vector</strong> = drawing with a pen — precise, infinitely scalable. <strong>Raster</strong> = digital photo — a grid of pixels that blurs when zoomed. GIS uses both depending on the data type.</p></div>'
+  +'<h3>The Three Vector Geometry Types</h3>'
+  +'<div class="steps">'
+  +'<div class="step"><div class="sbullet">•</div><div class="sbody"><h4>Point — A single coordinate</h4><p>Hospitals, trees, restaurants, city centres.</p></div></div>'
+  +'<div class="step"><div class="sbullet">—</div><div class="sbody"><h4>Polyline — Connected series of points</h4><p>Roads, rivers, pipelines. Has start and end, no fill area.</p></div></div>'
+  +'<div class="step"><div class="sbullet">▭</div><div class="sbody"><h4>Polygon — A closed filled shape</h4><p>Countries, lakes, building footprints, park boundaries.</p></div></div>'
+  +'</div>'
+  +'<div class="divider"></div>'
+  +'<h2>Map Projections</h2>'
+  +'<p>The Earth is a <strong>sphere</strong>. A map is <strong>flat</strong>. You cannot flatten a sphere perfectly — something always distorts. A <strong>projection</strong> is a mathematical method for converting 3D Earth to 2D.</p>'
+  +'<div class="box box-a"><p>Imagine trying to flatten an orange peel without tearing it — impossible. You can preserve <em>shapes</em>, or <em>areas</em>, or <em>distances</em> — but never all three. Every projection makes a trade-off.</p></div>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Projection</th><th>Preserves</th><th>Distorts</th><th>Used For</th></tr>'
+  +'<tr><td>Mercator / Web Mercator</td><td>Shapes (local)</td><td>Size near poles</td><td>Navigation, web maps</td></tr>'
+  +'<tr><td>Equal-Area</td><td>Area/size</td><td>Shapes</td><td>Statistical maps</td></tr>'
+  +'<tr><td>Equidistant</td><td>Distances from centre</td><td>Shape + area</td><td>Aviation, measuring</td></tr>'
+  +'<tr><td>Robinson</td><td>Visual balance</td><td>Both somewhat</td><td>Classroom world maps</td></tr>'
+  +'</table></div>'
+  +'<div class="box box-r"><p><strong>Web Mercator (EPSG:3857)</strong> is what ArcGIS basemaps use. Greenland appears as large as Africa on a world view — when Africa is 14× bigger. This is Mercator distortion. It explains why things look stretched near the poles.</p></div>'
+  +'<div class="divider"></div>'
+  +'<h2>Coordinate Systems in ArcGIS</h2>'
+  +'<div class="glossary">'
+  +'<div class="tc"><div class="tw">WGS84 (4326)</div><div class="td">The GPS standard. Coordinates in <strong>degrees</strong>. Use this when specifying locations in code: <code>[-74.0, 40.7]</code></div></div>'
+  +'<div class="tc"><div class="tw">Web Mercator (3857)</div><div class="td">Used by map tiles. Coordinates in <strong>metres</strong>. SDK converts between these automatically.</div></div>'
+  +'<div class="tc"><div class="tw">WKID</div><div class="td">Well-Known ID. <strong>4326</strong> = WGS84, <strong>3857</strong> = Web Mercator.</div></div>'
+  +'<div class="tc"><div class="tw">Mismatch Bug</div><div class="td">When data appears in the <strong>wrong location</strong>, a mismatched coordinate system is the #1 cause.</div></div>'
+  +'</div>'
+  +sumbox([
+    '<strong>Vector</strong> = points/lines/polygons with attributes — precise and scalable',
+    '<strong>Raster</strong> = pixel grid — satellite images, elevation, temperature maps',
+    'In ArcGIS you mainly work with <strong>vector data</strong> (FeatureLayers, GraphicsLayers)',
+    '<strong>Map projections</strong> flatten the 3D Earth — every one distorts something',
+    'ArcGIS basemaps use <strong>Web Mercator (3857)</strong>; your coordinates are usually <strong>WGS84 (4326)</strong>'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Identify &amp; Classify</h2>'
+  +'<ol><li>Vector or Raster? (a) city boundary, (b) satellite photo, (c) river line, (d) temperature heatmap.</li>'
+  +'<li>Name 3 real-world things that would be Points, 3 as Lines, 3 as Polygons.</li>'
+  +'<li>Google "Mercator distortion Greenland vs Africa" to see projection distortion visualised.</li></ol>'
+  +'<div class="pnote">💬 Next: the ArcGIS SDK structure!</div></div>'
+  +cbtn(2);
+}
+
+/* ══════════════════════════════════════════════
+   L3 — SDK Intro
+══════════════════════════════════════════════ */
+function c3(){
+  return hero(3,'Section 2','Intro to the<br><em>ArcGIS Maps SDK</em>',
+    'Meet the library you\'ll use for the rest of this course. Learn its architecture and how to load it.',
+    ['🕐 20 min','⚙️ Setup','📦 First HTML'])
+  +'<h2>What is the ArcGIS Maps SDK?</h2>'
+  +'<p>The <strong>ArcGIS Maps SDK for JavaScript</strong> (made by Esri) lets you build interactive 2D and 3D mapping applications in the browser. It\'s the world\'s most widely used enterprise GIS web library.</p>'
+  +'<div class="box box-a"><p>Building a GIS web app without a library is like building a house without power tools — possible, but painfully slow. <strong>ArcGIS SDK is your complete toolbox</strong>: pre-built Map, MapView, layers, widgets, renderers, and more.</p></div>'
+  +'<h2>The Three Core Building Blocks</h2>'
+  +'<div class="steps">'
+  +'<div class="step"><div class="sbullet">1</div><div class="sbody"><h4>Map — The data container</h4><p>Holds your basemap and all layers. Invisible by itself. Think of it as a playlist.</p></div></div>'
+  +'<div class="step"><div class="sbullet">2</div><div class="sbody"><h4>MapView — The visual display</h4><p>Takes your Map and renders it inside a div. Controls zoom, centre, and user interactions. Think of it as the screen playing the playlist.</p></div></div>'
+  +'<div class="step"><div class="sbullet">3</div><div class="sbody"><h4>Layers — The data</h4><p>Added to the Map. Each layer fetches and displays geographic data: FeatureLayer, GraphicsLayer, TileLayer, etc.</p></div></div>'
+  +'</div>'
+  +'<div class="divider"></div>'
+  +'<h2>Loading the SDK via CDN</h2>'
+  +code('HTML — in your &lt;head&gt;',
+    '<span class="cm">&lt;!-- ArcGIS SDK CSS --&gt;</span>\n'
+    +'<span class="kw">&lt;link</span> <span class="fn">rel</span>=<span class="str">"stylesheet"</span>\n'
+    +'  <span class="fn">href</span>=<span class="str">"https://js.arcgis.com/4.29/esri/themes/light/main.css"</span><span class="kw">&gt;</span>\n\n'
+    +'<span class="cm">&lt;!-- ArcGIS SDK JavaScript --&gt;</span>\n'
+    +'<span class="kw">&lt;script</span> <span class="fn">src</span>=<span class="str">"https://js.arcgis.com/4.29/"</span><span class="kw">&gt;&lt;/script&gt;</span>')
+  +'<h2>The require() Module System</h2>'
+  +code('JavaScript — AMD require pattern',
+    '<span class="fn">require</span>([\n'
+    +'  <span class="str">"esri/Map"</span>,\n'
+    +'  <span class="str">"esri/views/MapView"</span>\n'
+    +'], <span class="kw">function</span>(Map, MapView) {\n\n'
+    +'  <span class="cm">// Map and MapView classes are now available</span>\n\n'
+    +'});')
+  +'<div class="box box-w"><p>Module path strings like <code>esri/Map</code> must be spelled <strong>exactly right</strong>. Always check the ArcGIS API Reference. Bookmark: <strong>developers.arcgis.com/javascript/latest/api-reference/</strong></p></div>'
+  +'<h2>Key Module Paths</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Class</th><th>Module Path</th><th>Purpose</th></tr>'
+  +'<tr><td>Map</td><td>esri/Map</td><td>Data container</td></tr>'
+  +'<tr><td>MapView</td><td>esri/views/MapView</td><td>2D renderer</td></tr>'
+  +'<tr><td>SceneView</td><td>esri/views/SceneView</td><td>3D renderer</td></tr>'
+  +'<tr><td>FeatureLayer</td><td>esri/layers/FeatureLayer</td><td>Load server data</td></tr>'
+  +'<tr><td>GraphicsLayer</td><td>esri/layers/GraphicsLayer</td><td>Custom shapes</td></tr>'
+  +'<tr><td>Graphic</td><td>esri/Graphic</td><td>Single map feature</td></tr>'
+  +'<tr><td>Query</td><td>esri/rest/support/Query</td><td>Filter/query data</td></tr>'
+  +'</table></div>'
+  +sumbox([
+    'ArcGIS SDK = Esri\'s library for building web mapping apps',
+    'Three core objects: <strong>Map</strong> → <strong>MapView</strong> → <strong>Layers</strong>',
+    'Load via <strong>CDN</strong> (2 HTML tags) for learning; NPM for production',
+    'Use <strong>require([])</strong> with exact module path strings',
+    'Bookmark the <strong>ArcGIS API Reference</strong> — you\'ll use it constantly'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Explore the API Reference</h2>'
+  +'<ol><li>Bookmark <code>developers.arcgis.com/javascript/latest/api-reference/</code></li>'
+  +'<li>Look up "Map" — find its module path and <code>basemap</code> property options.</li>'
+  +'<li>Look up "MapView" — find <code>center</code>, <code>zoom</code>, and <code>container</code> properties.</li>'
+  +'<li>Create a blank HTML file, paste the two CDN tags, open in Chrome — no console errors = SDK loaded!</li></ol>'
+  +'<div class="pnote">💬 Next lesson: we write our first actual map!</div></div>'
+  +cbtn(3);
+}
+
+/* ══════════════════════════════════════════════
+   L4 — First Map
+══════════════════════════════════════════════ */
+function c4(){
+  return hero(4,'Section 2','Your <em>First Map</em><br>in ArcGIS JS',
+    'Time to write real code. A complete interactive web map from scratch in about 15 lines.',
+    ['🕐 30 min','💻 Code','🗺 First working map'])
+  +'<h2>The Complete Code</h2>'
+  +code('index.html — complete first map',
+    '<span class="kw">&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;</span>\n'
+    +'  <span class="kw">&lt;meta</span> <span class="fn">charset</span>=<span class="str">"UTF-8"</span><span class="kw">&gt;</span>\n'
+    +'  <span class="kw">&lt;link</span> <span class="fn">rel</span>=<span class="str">"stylesheet"</span> <span class="fn">href</span>=<span class="str">"https://js.arcgis.com/4.29/esri/themes/light/main.css"</span><span class="kw">&gt;</span>\n'
+    +'  <span class="kw">&lt;style&gt;</span>\n'
+    +'    html, body, #viewDiv { height: <span class="num">100%</span>; width: <span class="num">100%</span>; margin: <span class="num">0</span>; padding: <span class="num">0</span>; }\n'
+    +'  <span class="kw">&lt;/style&gt;\n&lt;/head&gt;&lt;body&gt;</span>\n\n'
+    +'  <span class="kw">&lt;div</span> <span class="fn">id</span>=<span class="str">"viewDiv"</span><span class="kw">&gt;&lt;/div&gt;</span>\n'
+    +'  <span class="kw">&lt;script</span> <span class="fn">src</span>=<span class="str">"https://js.arcgis.com/4.29/"</span><span class="kw">&gt;&lt;/script&gt;</span>\n\n'
+    +'  <span class="kw">&lt;script&gt;</span>\n'
+    +'    <span class="fn">require</span>([<span class="str">"esri/Map"</span>, <span class="str">"esri/views/MapView"</span>],\n'
+    +'    <span class="kw">function</span>(Map, MapView) {\n\n'
+    +'      <span class="kw">const</span> map = <span class="kw">new</span> <span class="fn">Map</span>({ basemap: <span class="str">"streets-navigation-vector"</span> });\n\n'
+    +'      <span class="kw">const</span> view = <span class="kw">new</span> <span class="fn">MapView</span>({\n'
+    +'        container: <span class="str">"viewDiv"</span>,\n'
+    +'        map: map,\n'
+    +'        center: [<span class="num">-74.0</span>, <span class="num">40.7</span>],  <span class="cm">// [longitude, latitude]</span>\n'
+    +'        zoom: <span class="num">12</span>\n'
+    +'      });\n'
+    +'    });\n'
+    +'  <span class="kw">&lt;/script&gt;\n&lt;/body&gt;&lt;/html&gt;</span>')
+  +'<div class="box box-w"><p><strong>center</strong> takes <code>[longitude, latitude]</code> — longitude first! <code>-74.0</code> is longitude (West), <code>40.7</code> is latitude (North).</p></div>'
+  +'<h2>Basemap Options</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Basemap String</th><th>Description</th><th>Best for</th></tr>'
+  +'<tr><td>streets-navigation-vector</td><td>Clean street map</td><td>Navigation, general use</td></tr>'
+  +'<tr><td>satellite</td><td>Satellite imagery</td><td>Environmental, land use</td></tr>'
+  +'<tr><td>hybrid</td><td>Satellite + labels</td><td>Popular general use</td></tr>'
+  +'<tr><td>topo-vector</td><td>Topographic</td><td>Terrain, hiking</td></tr>'
+  +'<tr><td>dark-gray-vector</td><td>Dark theme</td><td>Data dashboards</td></tr>'
+  +'<tr><td>gray-vector</td><td>Neutral grey</td><td>Data visualization</td></tr>'
+  +'</table></div>'
+  +'<h2>Zoom Level Reference</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Zoom</th><th>What You See</th></tr>'
+  +'<tr><td>0–3</td><td>Whole world / continents</td></tr>'
+  +'<tr><td>4–7</td><td>Countries / states</td></tr>'
+  +'<tr><td>8–12</td><td>Cities / regions</td></tr>'
+  +'<tr><td>13–16</td><td>Streets</td></tr>'
+  +'<tr><td>17–22</td><td>Buildings / rooms</td></tr>'
+  +'</table></div>'
+  +sumbox([
+    'Every ArcGIS app needs: <strong>CSS link + JS script + div + require() + Map + MapView</strong>',
+    'The <strong>#viewDiv must have CSS height</strong> or the map is invisible',
+    '<strong>center: [longitude, latitude]</strong> — always longitude first',
+    '<strong>zoom</strong>: 0 = whole world, 12 = city streets, 20+ = building level'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Build &amp; Customize Your First Map</h2>'
+  +'<ol><li>Create the HTML file above. Open in Chrome and confirm the map loads.</li>'
+  +'<li>Change the centre coordinates to your own city.</li>'
+  +'<li>Try basemaps: <code>satellite</code>, <code>dark-gray-vector</code>, <code>topo-vector</code>.</li>'
+  +'<li>Try zoom levels 2 (world view) and 17 (street level).</li></ol>'
+  +'<div class="pnote">💬 Next lesson: add data layers on top of your basemap!</div></div>'
+  +cbtn(4);
+}
+
+/* ══════════════════════════════════════════════
+   L5 — Adding Layers
+══════════════════════════════════════════════ */
+function c5(){
+  return hero(5,'Section 2','Adding <em>Layers</em><br>to Your Map',
+    'Load real datasets with FeatureLayer and create custom markers with GraphicsLayer.',
+    ['🕐 30 min','💻 Code','📍 Points & Polygons'])
+  +'<h2>Two Essential Layer Types</h2>'
+  +'<div class="glossary">'
+  +'<div class="tc"><div class="tw">FeatureLayer</div><div class="td">Loads data from an ArcGIS Feature Service URL. Best for real datasets — hospitals, roads, census data.</div></div>'
+  +'<div class="tc"><div class="tw">GraphicsLayer</div><div class="td">Created entirely in JavaScript. You add graphics manually. Best for custom markers and dynamic data.</div></div>'
+  +'</div>'
+  +'<h2>Adding a FeatureLayer</h2>'
+  +code('FeatureLayer example',
+    '<span class="fn">require</span>([\n'
+    +'  <span class="str">"esri/Map"</span>, <span class="str">"esri/views/MapView"</span>,\n'
+    +'  <span class="str">"esri/layers/FeatureLayer"</span>\n'
+    +'], <span class="kw">function</span>(Map, MapView, FeatureLayer) {\n\n'
+    +'  <span class="kw">const</span> layer = <span class="kw">new</span> <span class="fn">FeatureLayer</span>({\n'
+    +'    url: <span class="str">"https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Hospitals_in_US_1/FeatureServer/0"</span>,\n'
+    +'    title: <span class="str">"US Hospitals"</span>,\n'
+    +'    opacity: <span class="num">0.9</span>\n'
+    +'  });\n\n'
+    +'  <span class="kw">const</span> map = <span class="kw">new</span> <span class="fn">Map</span>({\n'
+    +'    basemap: <span class="str">"dark-gray-vector"</span>,\n'
+    +'    layers: [layer]\n'
+    +'  });\n\n'
+    +'  <span class="kw">new</span> <span class="fn">MapView</span>({ container: <span class="str">"viewDiv"</span>, map, center: [<span class="num">-98.5</span>, <span class="num">39.5</span>], zoom: <span class="num">5</span> });\n'
+    +'});')
+  +'<h3>Dynamic Layer Management</h3>'
+  +code('Add / remove / toggle',
+    'map.<span class="fn">add</span>(layer);           <span class="cm">// add a layer</span>\n'
+    +'map.<span class="fn">remove</span>(layer);        <span class="cm">// remove a layer</span>\n'
+    +'layer.visible = <span class="kw">false</span>;   <span class="cm">// hide (keeps data loaded)</span>\n'
+    +'layer.opacity = <span class="num">0.5</span>;     <span class="cm">// semi-transparent</span>')
+  +'<div class="divider"></div>'
+  +'<h2>Adding a GraphicsLayer</h2>'
+  +code('GraphicsLayer with point marker',
+    '<span class="fn">require</span>([\n'
+    +'  <span class="str">"esri/Map"</span>, <span class="str">"esri/views/MapView"</span>,\n'
+    +'  <span class="str">"esri/layers/GraphicsLayer"</span>,\n'
+    +'  <span class="str">"esri/Graphic"</span>, <span class="str">"esri/geometry/Point"</span>\n'
+    +'], <span class="kw">function</span>(Map, MapView, GraphicsLayer, Graphic, Point) {\n\n'
+    +'  <span class="kw">const</span> gLayer = <span class="kw">new</span> <span class="fn">GraphicsLayer</span>();\n\n'
+    +'  <span class="kw">const</span> g = <span class="kw">new</span> <span class="fn">Graphic</span>({\n'
+    +'    geometry: <span class="kw">new</span> <span class="fn">Point</span>({ longitude: <span class="num">-118.24</span>, latitude: <span class="num">34.05</span> }),\n'
+    +'    symbol: {\n'
+    +'      type: <span class="str">"simple-marker"</span>,\n'
+    +'      color: <span class="str">"#e8a030"</span>, size: <span class="str">"14px"</span>,\n'
+    +'      outline: { color: <span class="str">"white"</span>, width: <span class="num">2</span> }\n'
+    +'    },\n'
+    +'    attributes: { name: <span class="str">"Los Angeles"</span>, population: <span class="num">3900000</span> }\n'
+    +'  });\n\n'
+    +'  gLayer.<span class="fn">add</span>(g);\n'
+    +'  <span class="kw">new</span> <span class="fn">Map</span>({ basemap: <span class="str">"streets-navigation-vector"</span>, layers: [gLayer] });\n'
+    +'});')
+  +'<h2>Symbol Types</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Type</th><th>Geometry</th><th>Key Properties</th></tr>'
+  +'<tr><td>simple-marker</td><td>Point</td><td>color, size, style (circle/square/diamond)</td></tr>'
+  +'<tr><td>picture-marker</td><td>Point</td><td>url (image), width, height</td></tr>'
+  +'<tr><td>simple-line</td><td>Polyline</td><td>color, width, style</td></tr>'
+  +'<tr><td>simple-fill</td><td>Polygon</td><td>color (fill), outline: {color, width}</td></tr>'
+  +'</table></div>'
+  +sumbox([
+    '<strong>FeatureLayer</strong> = load data from a server URL',
+    '<strong>GraphicsLayer</strong> = add custom shapes entirely in JavaScript',
+    'A <strong>Graphic</strong> = geometry + symbol + optional attributes',
+    'Toggle with <strong>layer.visible</strong>, adjust with <strong>layer.opacity</strong>'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Multi-Layer Map</h2>'
+  +'<ol><li>Add the hospitals FeatureLayer to your Lesson 4 map with a dark-gray basemap.</li>'
+  +'<li>Add a GraphicsLayer with 3 custom point markers for cities of your choice.</li>'
+  +'<li>In the browser console type <code>layer.visible = false</code> then <code>true</code> — watch it toggle.</li></ol>'
+  +'<div class="pnote">💬 Next lesson: Popups — make your map talk when users click!</div></div>'
+  +cbtn(5);
+}
+
+/* ══════════════════════════════════════════════
+   L6 — Popups & Attributes
+══════════════════════════════════════════════ */
+function c6(){
+  return hero(6,'Section 3','<em>Popups</em> &amp;<br>Attributes',
+    'Make your map interactive. Configure popups to show rich information when users click on features.',
+    ['🕐 25 min','💻 Code','🖱 Interactive'])
+  +'<h2>What is a Popup?</h2>'
+  +'<p>A <strong>popup</strong> is an info window that appears when a user clicks a feature. It shows the feature\'s <strong>attributes</strong> — the data stored alongside its geometry.</p>'
+  +'<div class="box box-a"><p>Think of a popup like the label on a museum exhibit. The exhibit (geometry) is what you see; the popup is the placard that tells you what it is, when it was made, and why it matters.</p></div>'
+  +'<h2>PopupTemplate</h2>'
+  +'<p>You configure popups using a <code>popupTemplate</code> object. Use <code>{FieldName}</code> syntax to inject attribute values.</p>'
+  +code('FeatureLayer with PopupTemplate',
+    '<span class="kw">const</span> layer = <span class="kw">new</span> <span class="fn">FeatureLayer</span>({\n'
+    +'  url: <span class="str">"...FeatureServer/0"</span>,\n'
+    +'  popupTemplate: {\n'
+    +'    title: <span class="str">"{NAME}"</span>,\n'
+    +'    content: [\n'
+    +'      {\n'
+    +'        type: <span class="str">"fields"</span>,\n'
+    +'        fieldInfos: [\n'
+    +'          { fieldName: <span class="str">"ADDRESS"</span>, label: <span class="str">"Address"</span> },\n'
+    +'          { fieldName: <span class="str">"CITY"</span>,    label: <span class="str">"City"</span> },\n'
+    +'          { fieldName: <span class="str">"BEDS"</span>,    label: <span class="str">"Beds"</span>, format: { digitSeparator: <span class="kw">true</span> } }\n'
+    +'        ]\n'
+    +'      }\n'
+    +'    ]\n'
+    +'  }\n'
+    +'});')
+  +'<h3>Text Content with HTML</h3>'
+  +code('Custom HTML popup',
+    'popupTemplate: {\n'
+    +'  title: <span class="str">"&#x1F3E5; {NAME}"</span>,\n'
+    +'  content: <span class="str">"&lt;b&gt;Address:&lt;/b&gt; {ADDRESS}, {CITY}&lt;br&gt;"</span>\n'
+    +'         + <span class="str">"&lt;b&gt;Beds:&lt;/b&gt; {BEDS}&lt;br&gt;"</span>\n'
+    +'         + <span class="str">"&lt;b&gt;Phone:&lt;/b&gt; {TELEPHONE}"</span>\n'
+    +'}')
+  +'<div class="divider"></div>'
+  +'<h2>Popup on a Graphic</h2>'
+  +code('Graphic with popupTemplate',
+    '<span class="kw">const</span> g = <span class="kw">new</span> <span class="fn">Graphic</span>({\n'
+    +'  geometry: point,\n'
+    +'  symbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"#e8a030"</span>, size: <span class="str">"14px"</span> },\n'
+    +'  attributes: { name: <span class="str">"Los Angeles"</span>, pop: <span class="str">"3,900,000"</span> },\n'
+    +'  popupTemplate: {\n'
+    +'    title: <span class="str">"&#x1F4CD; {name}"</span>,\n'
+    +'    content: <span class="str">"&lt;b&gt;Population:&lt;/b&gt; {pop}"</span>\n'
+    +'  }\n'
+    +'});')
+  +'<div class="divider"></div>'
+  +'<h2>Programmatic Popup &amp; hitTest</h2>'
+  +code('Click handler with hitTest',
+    'view.<span class="fn">on</span>(<span class="str">"click"</span>, <span class="kw">async function</span>(event) {\n'
+    +'  <span class="kw">const</span> response = <span class="kw">await</span> view.<span class="fn">hitTest</span>(event);\n'
+    +'  <span class="kw">const</span> result  = response.results[<span class="num">0</span>];\n\n'
+    +'  <span class="kw">if</span> (result &amp;&amp; result.graphic) {\n'
+    +'    <span class="kw">const</span> attrs = result.graphic.attributes;\n'
+    +'    view.popup.<span class="fn">open</span>({\n'
+    +'      title: attrs.NAME || <span class="str">"Feature"</span>,\n'
+    +'      content: <span class="str">"&lt;b&gt;"</span> + attrs.NAME + <span class="str">"&lt;/b&gt; in "</span> + attrs.STATE,\n'
+    +'      location: event.mapPoint\n'
+    +'    });\n'
+    +'  }\n'
+    +'});')
+  +'<div class="box box-t"><p><code>view.hitTest(event)</code> finds all features under the click point across all layers — the foundation for building custom panels, context menus, and complex interactions.</p></div>'
+  +'<h2>Popup Docking</h2>'
+  +code('Dock the popup to a corner',
+    '<span class="kw">const</span> view = <span class="kw">new</span> <span class="fn">MapView</span>({\n'
+    +'  container: <span class="str">"viewDiv"</span>, map, center: [<span class="num">-98.5</span>, <span class="num">39.5</span>], zoom: <span class="num">5</span>,\n'
+    +'  popup: {\n'
+    +'    dockEnabled: <span class="kw">true</span>,\n'
+    +'    dockOptions: { position: <span class="str">"bottom-right"</span>, breakpoint: <span class="kw">false</span> }\n'
+    +'  }\n'
+    +'});')
+  +sumbox([
+    '<strong>popupTemplate</strong> defines what shows when a user clicks a feature',
+    'Use <strong>{FieldName}</strong> syntax to inject attribute values into title and content',
+    'Content types: <strong>fields</strong> (table), <strong>text/HTML string</strong>',
+    '<strong>view.hitTest(event)</strong> finds features under the click point',
+    'Control popup position with <strong>dockEnabled</strong> and <strong>dockOptions</strong>'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Make Your Map Talk</h2>'
+  +'<ol><li>Add a <code>popupTemplate</code> to the hospitals layer — show name, city, phone, beds.</li>'
+  +'<li>Add individual <code>popupTemplate</code> to your 3 city Graphics from Lesson 5.</li>'
+  +'<li>Add a click event with <code>view.hitTest()</code> — log the clicked feature\'s attributes.</li>'
+  +'<li><strong>Bonus:</strong> Try docking the popup to the bottom-right corner.</li></ol>'
+  +'<div class="pnote">💬 Next lesson: Queries — programmatically search and filter your data!</div></div>'
+  +cbtn(6);
+}
+
+/* ══════════════════════════════════════════════
+   L7 — Querying Features
+══════════════════════════════════════════════ */
+function c7(){
+  return hero(7,'Section 3','<em>Querying</em><br>Features',
+    'Ask questions of your data. Filter by attribute or location — then display, count, or analyze the results.',
+    ['🕐 30 min','💻 Code','🔍 Data filtering'])
+  +'<h2>What is a Query?</h2>'
+  +'<p>A <strong>query</strong> lets you ask questions of your geographic data: "Give me all hospitals with more than 500 beds in California." Results come back as a <strong>FeatureSet</strong> — a collection of matching features.</p>'
+  +'<div class="box box-a"><p>Think of a query like a Google search for your map data. Instead of searching the web, you\'re searching features in your layer: "which ones match these conditions?"</p></div>'
+  +'<h2>Basic Attribute Query</h2>'
+  +code('Attribute query with SQL where clause',
+    '<span class="fn">require</span>([<span class="str">"esri/rest/support/Query"</span>], <span class="kw">function</span>(Query) {\n\n'
+    +'  <span class="kw">const</span> q = <span class="kw">new</span> <span class="fn">Query</span>();\n'
+    +'  q.where = <span class="str">"STATE = \'CA\' AND BEDS &gt; 500"</span>;  <span class="cm">// SQL WHERE clause</span>\n'
+    +'  q.outFields = [<span class="str">"NAME"</span>, <span class="str">"BEDS"</span>, <span class="str">"CITY"</span>];\n'
+    +'  q.returnGeometry = <span class="kw">true</span>;\n\n'
+    +'  layer.<span class="fn">queryFeatures</span>(q).<span class="fn">then</span>(<span class="kw">function</span>(results) {\n'
+    +'    console.<span class="fn">log</span>(<span class="str">"Found:"</span>, results.features.length);\n'
+    +'    results.features.<span class="fn">forEach</span>(<span class="kw">function</span>(f) {\n'
+    +'      console.<span class="fn">log</span>(f.attributes.NAME, f.attributes.BEDS);\n'
+    +'    });\n'
+    +'  });\n'
+    +'});')
+  +'<div class="box box-k"><p>The <code>where</code> property uses standard <strong>SQL syntax</strong>. Strings need single quotes: <code>"STATE = \'CA\'"</code>. Numbers don\'t: <code>"BEDS &gt; 500"</code>. Combine with <code>AND</code>, <code>OR</code>, <code>NOT</code>, <code>LIKE</code>, <code>IN</code>.</p></div>'
+  +'<div class="divider"></div>'
+  +'<h2>Spatial Query — Features Within a Circle</h2>'
+  +code('Find features within a radius',
+    '<span class="fn">require</span>([\n'
+    +'  <span class="str">"esri/rest/support/Query"</span>,\n'
+    +'  <span class="str">"esri/geometry/Circle"</span>,\n'
+    +'  <span class="str">"esri/geometry/Point"</span>\n'
+    +'], <span class="kw">function</span>(Query, Circle, Point) {\n\n'
+    +'  <span class="kw">const</span> centre = <span class="kw">new</span> <span class="fn">Point</span>({ longitude: <span class="num">-118.24</span>, latitude: <span class="num">34.05</span> });\n\n'
+    +'  <span class="kw">const</span> q = <span class="kw">new</span> <span class="fn">Query</span>();\n'
+    +'  q.geometry = <span class="kw">new</span> <span class="fn">Circle</span>({ center: centre, radius: <span class="num">10</span>, radiusUnit: <span class="str">"kilometers"</span> });\n'
+    +'  q.spatialRelationship = <span class="str">"intersects"</span>;\n'
+    +'  q.outFields = [<span class="str">"NAME"</span>, <span class="str">"BEDS"</span>];\n'
+    +'  q.returnGeometry = <span class="kw">true</span>;\n\n'
+    +'  layer.<span class="fn">queryFeatures</span>(q).<span class="fn">then</span>(<span class="kw">function</span>(results) {\n'
+    +'    console.<span class="fn">log</span>(<span class="str">"Within 10km:"</span>, results.features.length);\n'
+    +'  });\n'
+    +'});')
+  +'<div class="divider"></div>'
+  +'<h2>Display Results on the Map</h2>'
+  +code('Add query results as Graphics',
+    '<span class="kw">const</span> resultsLayer = <span class="kw">new</span> <span class="fn">GraphicsLayer</span>();\n'
+    +'map.<span class="fn">add</span>(resultsLayer);\n\n'
+    +'layer.<span class="fn">queryFeatures</span>(q).<span class="fn">then</span>(<span class="kw">function</span>(results) {\n'
+    +'  resultsLayer.<span class="fn">removeAll</span>();\n\n'
+    +'  results.features.<span class="fn">forEach</span>(<span class="kw">function</span>(f) {\n'
+    +'    f.symbol = { type: <span class="str">"simple-marker"</span>, color: <span class="str">"red"</span>, size: <span class="str">"16px"</span> };\n'
+    +'    resultsLayer.<span class="fn">add</span>(f);\n'
+    +'  });\n\n'
+    +'  view.<span class="fn">goTo</span>(results.features);  <span class="cm">// zoom to fit all results</span>\n'
+    +'});')
+  +'<div class="box box-t"><p><code>view.goTo(features)</code> automatically animates the map to fit all result features in view — always include it for a polished UX.</p></div>'
+  +'<h2>Count Query</h2>'
+  +code('Count without returning geometry',
+    '<span class="kw">const</span> q = <span class="kw">new</span> <span class="fn">Query</span>();\n'
+    +'q.where = <span class="str">"STATE = \'TX\'"</span>;\n'
+    +'q.returnGeometry = <span class="kw">false</span>;\n\n'
+    +'layer.<span class="fn">queryFeatureCount</span>(q).<span class="fn">then</span>(<span class="kw">function</span>(count) {\n'
+    +'  console.<span class="fn">log</span>(<span class="str">"Hospitals in Texas:"</span>, count);\n'
+    +'});')
+  +'<h2>SQL Quick Reference</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Pattern</th><th>Example</th><th>Meaning</th></tr>'
+  +'<tr><td>= \'value\'</td><td>STATE = \'CA\'</td><td>Exact string match</td></tr>'
+  +'<tr><td>&gt; / &lt; / &gt;=</td><td>BEDS &gt;= 200</td><td>Numeric comparison</td></tr>'
+  +'<tr><td>AND / OR</td><td>STATE=\'CA\' AND BEDS&gt;100</td><td>Combine conditions</td></tr>'
+  +'<tr><td>LIKE \'%text%\'</td><td>NAME LIKE \'%General%\'</td><td>Partial string match</td></tr>'
+  +'<tr><td>IN (\'a\',\'b\')</td><td>STATE IN (\'CA\',\'NY\')</td><td>Match any in list</td></tr>'
+  +'<tr><td>IS NULL</td><td>TELEPHONE IS NULL</td><td>No value present</td></tr>'
+  +'</table></div>'
+  +sumbox([
+    '<strong>q.where</strong> uses SQL to filter by attributes',
+    '<strong>q.geometry</strong> filters by spatial location (circle, polygon, etc.)',
+    '<strong>layer.queryFeatures(q)</strong> returns a Promise with a FeatureSet',
+    'Display results by adding features to a <strong>GraphicsLayer</strong>',
+    '<strong>view.goTo(features)</strong> animates the map to fit all results',
+    '<strong>layer.queryFeatureCount(q)</strong> returns just a count — no geometry needed'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Search Your Data</h2>'
+  +'<ol><li>Query hospitals in New York state with &gt;300 beds. Log names to the console.</li>'
+  +'<li>Display results as red markers on a GraphicsLayer. Use <code>view.goTo()</code>.</li>'
+  +'<li>Add a count query — show how many hospitals are in a state of your choice.</li>'
+  +'<li><strong>Bonus:</strong> Spatial query — hospitals within 20km of your city coordinates.</li></ol>'
+  +'<div class="pnote">💬 Next lesson: Symbols &amp; Renderers — style features based on their data values!</div></div>'
+  +cbtn(7);
+}
+
+/* ══════════════════════════════════════════════
+   L8 — Symbols & Renderers
+══════════════════════════════════════════════ */
+function c8(){
+  return hero(8,'Section 3','<em>Symbols</em> &amp;<br>Renderers',
+    'Style your map features based on their data. Color, size, and shape driven by attribute values.',
+    ['🕐 25 min','💻 Code','🎨 Data-driven styling'])
+  +'<h2>Why Renderers?</h2>'
+  +'<p>A <strong>Renderer</strong> defines how all features in a layer are drawn — and it can vary the visual style based on <strong>attribute values</strong>. Instead of every hospital looking the same, a renderer can make large hospitals bigger or color them by type.</p>'
+  +'<div class="box box-a"><p>Without a renderer, all features look identical — like painting every house grey. A renderer is a paint-by-numbers guide: "colour hospitals with 500+ beds red, 200–500 orange, under 200 yellow." The data <em>drives</em> the visual.</p></div>'
+  +'<h2>SimpleRenderer — One Style for All</h2>'
+  +code('SimpleRenderer',
+    '<span class="kw">const</span> layer = <span class="kw">new</span> <span class="fn">FeatureLayer</span>({\n'
+    +'  url: <span class="str">"...FeatureServer/0"</span>,\n'
+    +'  renderer: {\n'
+    +'    type: <span class="str">"simple"</span>,\n'
+    +'    symbol: {\n'
+    +'      type: <span class="str">"simple-marker"</span>,\n'
+    +'      color: [<span class="num">0</span>, <span class="num">150</span>, <span class="num">255</span>],\n'
+    +'      size: <span class="str">"10px"</span>,\n'
+    +'      outline: { color: <span class="str">"white"</span>, width: <span class="num">1.5</span> }\n'
+    +'    }\n'
+    +'  }\n'
+    +'});')
+  +'<div class="divider"></div>'
+  +'<h2>UniqueValueRenderer — Style by Category</h2>'
+  +code('UniqueValueRenderer — color by type',
+    'renderer: {\n'
+    +'  type: <span class="str">"unique-value"</span>,\n'
+    +'  field: <span class="str">"TYPE"</span>,\n'
+    +'  defaultSymbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"grey"</span>, size: <span class="str">"8px"</span> },\n'
+    +'  uniqueValueInfos: [\n'
+    +'    {\n'
+    +'      value: <span class="str">"GENERAL MEDICAL"</span>,\n'
+    +'      symbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"#2b7aab"</span>, size: <span class="str">"10px"</span> },\n'
+    +'      label: <span class="str">"General Medical"</span>\n'
+    +'    },\n'
+    +'    {\n'
+    +'      value: <span class="str">"CRITICAL ACCESS"</span>,\n'
+    +'      symbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"#e8a030"</span>, size: <span class="str">"10px"</span> },\n'
+    +'      label: <span class="str">"Critical Access"</span>\n'
+    +'    }\n'
+    +'  ]\n'
+    +'}')
+  +'<div class="divider"></div>'
+  +'<h2>ClassBreaksRenderer — Style by Number Range</h2>'
+  +code('ClassBreaksRenderer — size by bed count',
+    'renderer: {\n'
+    +'  type: <span class="str">"class-breaks"</span>,\n'
+    +'  field: <span class="str">"BEDS"</span>,\n'
+    +'  defaultSymbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"grey"</span>, size: <span class="str">"6px"</span> },\n'
+    +'  classBreakInfos: [\n'
+    +'    {\n'
+    +'      minValue: <span class="num">0</span>, maxValue: <span class="num">100</span>,\n'
+    +'      symbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"#a8ddb8"</span>, size: <span class="str">"6px"</span> },\n'
+    +'      label: <span class="str">"Small (0–100 beds)"</span>\n'
+    +'    },\n'
+    +'    {\n'
+    +'      minValue: <span class="num">101</span>, maxValue: <span class="num">300</span>,\n'
+    +'      symbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"#4caf72"</span>, size: <span class="str">"10px"</span> },\n'
+    +'      label: <span class="str">"Medium (101–300)"</span>\n'
+    +'    },\n'
+    +'    {\n'
+    +'      minValue: <span class="num">301</span>, maxValue: <span class="num">99999</span>,\n'
+    +'      symbol: { type: <span class="str">"simple-marker"</span>, color: <span class="str">"#1a3a2a"</span>, size: <span class="str">"16px"</span> },\n'
+    +'      label: <span class="str">"Large (300+ beds)"</span>\n'
+    +'    }\n'
+    +'  ]\n'
+    +'}')
+  +'<div class="divider"></div>'
+  +'<h2>Labels</h2>'
+  +code('labelingInfo — text labels on features',
+    '<span class="kw">const</span> layer = <span class="kw">new</span> <span class="fn">FeatureLayer</span>({\n'
+    +'  url: <span class="str">"...FeatureServer/0"</span>,\n'
+    +'  labelingInfo: [{\n'
+    +'    labelExpressionInfo: { expression: <span class="str">"$feature.NAME"</span> },\n'
+    +'    symbol: {\n'
+    +'      type: <span class="str">"text"</span>, color: <span class="str">"#1a3a2a"</span>,\n'
+    +'      haloColor: <span class="str">"white"</span>, haloSize: <span class="str">"2px"</span>,\n'
+    +'      font: { size: <span class="num">10</span>, weight: <span class="str">"bold"</span> }\n'
+    +'    },\n'
+    +'    minScale: <span class="num">500000</span>,  <span class="cm">// only show when zoomed in</span>\n'
+    +'    maxScale: <span class="num">0</span>\n'
+    +'  }]\n'
+    +'});')
+  +'<div class="box box-t"><p><strong>minScale</strong> and <strong>maxScale</strong> control at what zoom level labels appear. <code>minScale: 500000</code> means labels only show when zoomed past 1:500,000 scale — preventing clutter at world view.</p></div>'
+  +'<h2>Layer Effects</h2>'
+  +code('Visual effects on layers',
+    '<span class="cm">// Glow / bloom effect (great for dark basemaps)</span>\n'
+    +'layer.effect = <span class="str">"bloom(1.5, 0.5px, 0)"</span>;\n\n'
+    +'<span class="cm">// Drop shadow</span>\n'
+    +'layer.effect = <span class="str">"drop-shadow(2px, 2px, 4px, black)"</span>;\n\n'
+    +'<span class="cm">// Blur (good for background / context layers)</span>\n'
+    +'layer.effect = <span class="str">"blur(2px)"</span>;')
+  +sumbox([
+    '<strong>SimpleRenderer</strong>: one symbol for all features',
+    '<strong>UniqueValueRenderer</strong>: different symbol per category value',
+    '<strong>ClassBreaksRenderer</strong>: vary symbol by numeric ranges',
+    '<strong>labelingInfo</strong>: automatic text labels with Arcade expressions',
+    '<strong>minScale / maxScale</strong>: show/hide labels at certain zoom levels',
+    '<strong>layer.effect</strong>: bloom, drop-shadow, blur effects'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Style Your Map</h2>'
+  +'<ol><li>Apply a <strong>ClassBreaksRenderer</strong> to the hospitals layer using the <code>BEDS</code> field — 3 size classes.</li>'
+  +'<li>Switch to a <strong>UniqueValueRenderer</strong> using the <code>TYPE</code> field with at least 3 different colors.</li>'
+  +'<li>Add <strong>labelingInfo</strong> showing hospital names — only when zoomed in past zoom 10.</li>'
+  +'<li><strong>Bonus:</strong> Add a <code>bloom</code> effect on a dark-gray basemap.</li></ol>'
+  +'<div class="pnote">💬 Next lesson: 3D SceneView — take your maps into three dimensions!</div></div>'
+  +cbtn(8);
+}
+
+/* ══════════════════════════════════════════════
+   L9 — 3D SceneView
+══════════════════════════════════════════════ */
+function c9(){
+  return hero(9,'Section 4','<em>3D</em> SceneView',
+    'Take your maps into three dimensions. The same Map and layers you already know — now in a full 3D globe.',
+    ['🕐 30 min','💻 Code','🌐 3D Globe'])
+  +'<h2>MapView vs SceneView</h2>'
+  +'<p>Everything you\'ve learned about Map, layers, renderers, and popups works in both 2D and 3D. The only change is replacing <code>MapView</code> with <code>SceneView</code>.</p>'
+  +'<div class="glossary">'
+  +'<div class="tc"><div class="tw">MapView</div><div class="td">2D flat map. Pan and zoom in two dimensions. Fast and familiar.</div></div>'
+  +'<div class="tc"><div class="tw">SceneView</div><div class="td">3D globe or local scene. Tilt, rotate, fly to locations. Buildings extruded in real height.</div></div>'
+  +'<div class="tc"><div class="tw">global scene</div><div class="td">Full spherical Earth mode. Great for worldwide data visualization.</div></div>'
+  +'<div class="tc"><div class="tw">local scene</div><div class="td">Flat-projection 3D for city/building level work. Better performance at close range.</div></div>'
+  +'</div>'
+  +'<h2>Your First 3D Scene</h2>'
+  +code('SceneView — basic 3D globe',
+    '<span class="fn">require</span>([\n'
+    +'  <span class="str">"esri/Map"</span>,\n'
+    +'  <span class="str">"esri/views/SceneView"</span>  <span class="cm">// ← only change from MapView!</span>\n'
+    +'], <span class="kw">function</span>(Map, SceneView) {\n\n'
+    +'  <span class="kw">const</span> map = <span class="kw">new</span> <span class="fn">Map</span>({\n'
+    +'    basemap: <span class="str">"satellite"</span>,\n'
+    +'    ground: <span class="str">"world-elevation"</span>  <span class="cm">// real terrain elevation</span>\n'
+    +'  });\n\n'
+    +'  <span class="kw">const</span> view = <span class="kw">new</span> <span class="fn">SceneView</span>({\n'
+    +'    container: <span class="str">"viewDiv"</span>,\n'
+    +'    map: map,\n'
+    +'    camera: {\n'
+    +'      position: { longitude: <span class="num">-118.24</span>, latitude: <span class="num">34.05</span>, z: <span class="num">50000</span> },\n'
+    +'      tilt: <span class="num">60</span>,     <span class="cm">// 0 = top-down, 90 = horizon</span>\n'
+    +'      heading: <span class="num">0</span>    <span class="cm">// compass direction</span>\n'
+    +'    }\n'
+    +'  });\n'
+    +'});')
+  +'<div class="box box-k"><p>In SceneView, instead of <code>center + zoom</code>, you use a <strong>camera</strong> object with <code>position</code> (lon, lat, altitude in metres), <code>tilt</code> (angle), and <code>heading</code> (compass direction).</p></div>'
+  +'<div class="divider"></div>'
+  +'<h2>3D Extrusion</h2>'
+  +'<p>Make polygons rise into 3D shapes based on an attribute value — perfect for building heights, population towers, or bar charts on maps:</p>'
+  +code('polygon-3d + extrude symbol',
+    'renderer: {\n'
+    +'  type: <span class="str">"simple"</span>,\n'
+    +'  symbol: {\n'
+    +'    type: <span class="str">"polygon-3d"</span>,\n'
+    +'    symbolLayers: [{\n'
+    +'      type: <span class="str">"extrude"</span>,\n'
+    +'      material: { color: [<span class="num">100</span>, <span class="num">160</span>, <span class="num">255</span>, <span class="num">0.8</span>] },\n'
+    +'      edges: { type: <span class="str">"solid"</span>, color: [<span class="num">30</span>, <span class="num">60</span>, <span class="num">120</span>], size: <span class="num">0.5</span> }\n'
+    +'    }]\n'
+    +'  },\n'
+    +'  visualVariables: [{\n'
+    +'    type: <span class="str">"size"</span>,\n'
+    +'    field: <span class="str">"HEIGHT"</span>,    <span class="cm">// attribute that drives height</span>\n'
+    +'    valueUnit: <span class="str">"meters"</span>\n'
+    +'  }]\n'
+    +'}')
+  +'<div class="divider"></div>'
+  +'<h2>Animating the Camera</h2>'
+  +code('Fly to a location',
+    '<span class="cm">// Animate camera to Tokyo</span>\n'
+    +'view.<span class="fn">goTo</span>({\n'
+    +'  position: { longitude: <span class="num">139.69</span>, latitude: <span class="num">35.68</span>, z: <span class="num">20000</span> },\n'
+    +'  tilt: <span class="num">65</span>,\n'
+    +'  heading: <span class="num">30</span>\n'
+    +'}, {\n'
+    +'  speedFactor: <span class="num">0.5</span>,       <span class="cm">// slower = more cinematic</span>\n'
+    +'  easing: <span class="str">"in-out-coast"</span>  <span class="cm">// smooth animation curve</span>\n'
+    +'});')
+  +'<h2>SceneView vs MapView Reference</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Property</th><th>MapView (2D)</th><th>SceneView (3D)</th></tr>'
+  +'<tr><td>Module</td><td>esri/views/MapView</td><td>esri/views/SceneView</td></tr>'
+  +'<tr><td>Position</td><td>center + zoom</td><td>camera: {position, tilt, heading}</td></tr>'
+  +'<tr><td>Altitude</td><td>n/a</td><td>camera.position.z (metres)</td></tr>'
+  +'<tr><td>Ground</td><td>n/a</td><td>map.ground = "world-elevation"</td></tr>'
+  +'<tr><td>Symbol prefix</td><td>simple-marker, simple-fill</td><td>point-3d, polygon-3d</td></tr>'
+  +'</table></div>'
+  +sumbox([
+    'Switch <strong>MapView → SceneView</strong> to go 3D — everything else stays the same',
+    'Use <strong>camera</strong> (position + tilt + heading) instead of center + zoom',
+    'Add <strong>ground: "world-elevation"</strong> for real terrain',
+    '<strong>Extrusion</strong> via polygon-3d + extrude symbol layer makes polygons rise into 3D',
+    '<strong>view.goTo()</strong> with speedFactor and easing creates cinematic camera flights'
+  ])
+  +'<div class="practice"><div class="ptag">✏️ Practice</div><h2>Build Your First 3D Scene</h2>'
+  +'<ol><li>Take your Lesson 4 map and swap <code>MapView</code> for <code>SceneView</code>. Add <code>ground: "world-elevation"</code>. The world is now a 3D globe!</li>'
+  +'<li>Replace <code>center + zoom</code> with a <code>camera</code> object. Set tilt to 60 and fly over the Alps: lon=10, lat=46, z=80000.</li>'
+  +'<li>Use <code>view.goTo()</code> with <code>speedFactor: 0.3</code> to fly from your start point to Tokyo on load.</li>'
+  +'<li><strong>Bonus:</strong> Add a polygon FeatureLayer and apply extrusion based on a numeric field.</li></ol>'
+  +'<div class="pnote">💬 Final lesson: build a complete real-world app combining everything!</div></div>'
+  +cbtn(9);
+}
+
+/* ══════════════════════════════════════════════
+   L10 — Final Project
+══════════════════════════════════════════════ */
+function c10(){
+  return hero(10,'Section 4','<em>Final Project</em>:<br>Hospital Finder App',
+    'Build a complete, production-quality GIS web application combining everything from this course.',
+    ['🕐 60 min','🏆 Capstone','💻 Full app'])
+  +'<h2>What You\'re Building</h2>'
+  +'<p>A <strong>Hospital Finder App</strong> — search hospitals by state, filter by bed count, view styled results with popups, and find hospitals nearest to any map click.</p>'
+  +'<div class="box box-r"><p>This is a realistic, production-style app. Government agencies, healthcare companies, and logistics providers build exactly this type of tool. By the end you\'ll have a portfolio-worthy GIS application.</p></div>'
+  +'<h2>App Features</h2>'
+  +'<div class="steps">'
+  +'<div class="step"><div class="sbullet">1</div><div class="sbody"><h4>Styled Hospital Layer</h4><p>ClassBreaksRenderer colors hospitals by bed count. Labels at zoom-in. Dark basemap for impact.</p></div></div>'
+  +'<div class="step"><div class="sbullet">2</div><div class="sbody"><h4>Search Panel</h4><p>Sidebar with state dropdown and minimum-beds slider. Click Search to run a query and zoom to results.</p></div></div>'
+  +'<div class="step"><div class="sbullet">3</div><div class="sbody"><h4>Rich Popups</h4><p>Click any hospital for name, address, phone, type, and bed count.</p></div></div>'
+  +'<div class="step"><div class="sbullet">4</div><div class="sbody"><h4>Nearest Hospital</h4><p>Click anywhere on the map to find the 5 nearest hospitals. Results highlighted in orange.</p></div></div>'
+  +'</div>'
+  +'<div class="divider"></div>'
+  +'<h2>HTML Structure</h2>'
+  +code('index.html — layout &amp; styles',
+    '<span class="kw">&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;</span>\n'
+    +'  <span class="kw">&lt;link</span> <span class="fn">rel</span>=<span class="str">"stylesheet"</span> <span class="fn">href</span>=<span class="str">"https://js.arcgis.com/4.29/esri/themes/dark/main.css"</span><span class="kw">&gt;</span>\n'
+    +'  <span class="kw">&lt;style&gt;</span>\n'
+    +'    html,body { height:100%; margin:0; background:#1a1a1a; font-family:sans-serif; }\n'
+    +'    #app    { display:flex; height:100%; }\n'
+    +'    #panel  { width:280px; background:#1e2a1e; color:#cde8d0; padding:20px; }\n'
+    +'    #viewDiv { flex:1; }\n'
+    +'  <span class="kw">&lt;/style&gt;\n&lt;/head&gt;&lt;body&gt;</span>\n'
+    +'  <span class="kw">&lt;div</span> <span class="fn">id</span>=<span class="str">"app"</span><span class="kw">&gt;</span>\n'
+    +'    <span class="kw">&lt;div</span> <span class="fn">id</span>=<span class="str">"panel"</span><span class="kw">&gt;</span>\n'
+    +'      <span class="kw">&lt;h2&gt;</span>Hospital Finder<span class="kw">&lt;/h2&gt;</span>\n'
+    +'      <span class="kw">&lt;select</span> <span class="fn">id</span>=<span class="str">"stateSelect"</span><span class="kw">&gt;</span>\n'
+    +'        <span class="kw">&lt;option</span> <span class="fn">value</span>=<span class="str">""</span><span class="kw">&gt;</span>All States<span class="kw">&lt;/option&gt;</span>\n'
+    +'        <span class="kw">&lt;option&gt;</span>CA<span class="kw">&lt;/option&gt;&lt;option&gt;</span>TX<span class="kw">&lt;/option&gt;&lt;option&gt;</span>NY<span class="kw">&lt;/option&gt;</span>\n'
+    +'      <span class="kw">&lt;/select&gt;</span>\n'
+    +'      <span class="kw">&lt;input</span> <span class="fn">type</span>=<span class="str">"range"</span> <span class="fn">id</span>=<span class="str">"bedsSlider"</span> <span class="fn">min</span>=<span class="str">"0"</span> <span class="fn">max</span>=<span class="str">"1000"</span> <span class="fn">step</span>=<span class="str">"50"</span><span class="kw">&gt;</span>\n'
+    +'      <span class="kw">&lt;button</span> <span class="fn">onclick</span>=<span class="str">"searchHospitals()"</span><span class="kw">&gt;</span>Search<span class="kw">&lt;/button&gt;</span>\n'
+    +'      <span class="kw">&lt;div</span> <span class="fn">id</span>=<span class="str">"status"</span><span class="kw">&gt;&lt;/div&gt;</span>\n'
+    +'      <span class="kw">&lt;div</span> <span class="fn">id</span>=<span class="str">"results"</span><span class="kw">&gt;&lt;/div&gt;</span>\n'
+    +'    <span class="kw">&lt;/div&gt;</span>\n'
+    +'    <span class="kw">&lt;div</span> <span class="fn">id</span>=<span class="str">"viewDiv"</span><span class="kw">&gt;&lt;/div&gt;</span>\n'
+    +'  <span class="kw">&lt;/div&gt;</span>\n'
+    +'<span class="kw">&lt;/body&gt;&lt;/html&gt;</span>')
+  +'<h2>JavaScript — Map Setup</h2>'
+  +code('Initialise map, layer, and renderer',
+    '<span class="kw">var</span> view, hospitalsLayer, resultsLayer;\n\n'
+    +'<span class="fn">require</span>([\n'
+    +'  <span class="str">"esri/Map"</span>, <span class="str">"esri/views/MapView"</span>,\n'
+    +'  <span class="str">"esri/layers/FeatureLayer"</span>, <span class="str">"esri/layers/GraphicsLayer"</span>,\n'
+    +'  <span class="str">"esri/rest/support/Query"</span>, <span class="str">"esri/geometry/Circle"</span>\n'
+    +'], <span class="kw">function</span>(Map, MapView, FeatureLayer, GraphicsLayer, Query, Circle) {\n\n'
+    +'  resultsLayer = <span class="kw">new</span> <span class="fn">GraphicsLayer</span>();\n\n'
+    +'  hospitalsLayer = <span class="kw">new</span> <span class="fn">FeatureLayer</span>({\n'
+    +'    url: <span class="str">"https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Hospitals_in_US_1/FeatureServer/0"</span>,\n'
+    +'    renderer: {\n'
+    +'      type: <span class="str">"class-breaks"</span>, field: <span class="str">"BEDS"</span>,\n'
+    +'      classBreakInfos: [\n'
+    +'        { minValue:<span class="num">0</span>,   maxValue:<span class="num">100</span>,  symbol:{ type:<span class="str">"simple-marker"</span>, color:<span class="str">"#a8ddb8"</span>, size:<span class="str">"5px"</span> } },\n'
+    +'        { minValue:<span class="num">101</span>, maxValue:<span class="num">300</span>,  symbol:{ type:<span class="str">"simple-marker"</span>, color:<span class="str">"#4caf72"</span>, size:<span class="str">"9px"</span> } },\n'
+    +'        { minValue:<span class="num">301</span>, maxValue:<span class="num">99999</span>,symbol:{ type:<span class="str">"simple-marker"</span>, color:<span class="str">"#5dcc84"</span>, size:<span class="str">"14px"</span> } }\n'
+    +'      ]\n'
+    +'    },\n'
+    +'    popupTemplate: {\n'
+    +'      title: <span class="str">"{NAME}"</span>,\n'
+    +'      content: <span class="str">"&lt;b&gt;Address:&lt;/b&gt; {ADDRESS}, {CITY}&lt;br&gt;&lt;b&gt;Beds:&lt;/b&gt; {BEDS}&lt;br&gt;&lt;b&gt;Phone:&lt;/b&gt; {TELEPHONE}"</span>\n'
+    +'    }\n'
+    +'  });\n\n'
+    +'  <span class="kw">const</span> map = <span class="kw">new</span> <span class="fn">Map</span>({\n'
+    +'    basemap: <span class="str">"dark-gray-vector"</span>,\n'
+    +'    layers: [hospitalsLayer, resultsLayer]\n'
+    +'  });\n\n'
+    +'  view = <span class="kw">new</span> <span class="fn">MapView</span>({ container: <span class="str">"viewDiv"</span>, map, center: [<span class="num">-98.5</span>, <span class="num">39.5</span>], zoom: <span class="num">5</span> });\n\n'
+    +'  <span class="cm">// Store Query + Circle for use in searchHospitals()</span>\n'
+    +'  window._Query  = Query;\n'
+    +'  window._Circle = Circle;\n\n'
+    +'  <span class="cm">// Click map → find nearest hospitals</span>\n'
+    +'  view.<span class="fn">on</span>(<span class="str">"click"</span>, <span class="kw">function</span>(evt) {\n'
+    +'    <span class="kw">var</span> q = <span class="kw">new</span> <span class="fn">Query</span>();\n'
+    +'    q.geometry = <span class="kw">new</span> <span class="fn">Circle</span>({ center: evt.mapPoint, radius: <span class="num">100</span>, radiusUnit: <span class="str">"kilometers"</span> });\n'
+    +'    q.spatialRelationship = <span class="str">"intersects"</span>;\n'
+    +'    q.outFields = [<span class="str">"NAME"</span>,<span class="str">"BEDS"</span>,<span class="str">"CITY"</span>];\n'
+    +'    q.returnGeometry = <span class="kw">true</span>;\n'
+    +'    q.num = <span class="num">5</span>;\n\n'
+    +'    hospitalsLayer.<span class="fn">queryFeatures</span>(q).<span class="fn">then</span>(<span class="kw">function</span>(res) {\n'
+    +'      resultsLayer.<span class="fn">removeAll</span>();\n'
+    +'      res.features.<span class="fn">forEach</span>(<span class="kw">function</span>(f) {\n'
+    +'        f.symbol = { type:<span class="str">"simple-marker"</span>, color:<span class="str">"#e8a030"</span>, size:<span class="str">"16px"</span>, outline:{color:<span class="str">"white"</span>,width:<span class="num">2</span>} };\n'
+    +'        resultsLayer.<span class="fn">add</span>(f);\n'
+    +'      });\n'
+    +'      document.getElementById(<span class="str">"status"</span>).textContent = res.features.length + <span class="str">" hospitals nearby"</span>;\n'
+    +'    });\n'
+    +'  });\n'
+    +'});')
+  +'<h2>JavaScript — Search Function</h2>'
+  +code('searchHospitals() — called by the button',
+    '<span class="kw">function</span> <span class="fn">searchHospitals</span>() {\n'
+    +'  <span class="kw">var</span> state = document.getElementById(<span class="str">"stateSelect"</span>).value;\n'
+    +'  <span class="kw">var</span> beds  = +document.getElementById(<span class="str">"bedsSlider"</span>).value;\n'
+    +'  <span class="kw">var</span> where = <span class="str">"BEDS >= "</span> + beds;\n'
+    +'  <span class="kw">if</span> (state) where += <span class="str">" AND STATE = \'"</span> + state + <span class="str">"\'"</span>;\n\n'
+    +'  <span class="kw">var</span> q = <span class="kw">new</span> window._Query();\n'
+    +'  q.where = where;\n'
+    +'  q.outFields = [<span class="str">"NAME"</span>, <span class="str">"CITY"</span>, <span class="str">"BEDS"</span>];\n'
+    +'  q.returnGeometry = <span class="kw">true</span>;\n\n'
+    +'  document.getElementById(<span class="str">"status"</span>).textContent = <span class="str">"Searching..."</span>;\n'
+    +'  document.getElementById(<span class="str">"results"</span>).innerHTML = <span class="str">""</span>;\n\n'
+    +'  hospitalsLayer.<span class="fn">queryFeatures</span>(q).<span class="fn">then</span>(<span class="kw">function</span>(res) {\n'
+    +'    document.getElementById(<span class="str">"status"</span>).textContent = <span class="str">"Found "</span> + res.features.length + <span class="str">" hospitals"</span>;\n\n'
+    +'    res.features.<span class="fn">forEach</span>(<span class="kw">function</span>(f) {\n'
+    +'      <span class="kw">var</span> d = document.<span class="fn">createElement</span>(<span class="str">"div"</span>);\n'
+    +'      d.style.cssText = <span class="str">"background:#253425;border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer;"</span>;\n'
+    +'      d.innerHTML = <span class="str">"&lt;b&gt;"</span> + f.attributes.NAME + <span class="str">"&lt;/b&gt;&lt;br&gt;"</span> + f.attributes.CITY + <span class="str">" · "</span> + f.attributes.BEDS + <span class="str">" beds"</span>;\n'
+    +'      d.onclick = <span class="kw">function</span>() { view.<span class="fn">goTo</span>({ target: f.geometry, zoom: <span class="num">13</span> }); };\n'
+    +'      document.getElementById(<span class="str">"results"</span>).<span class="fn">appendChild</span>(d);\n'
+    +'    });\n\n'
+    +'    <span class="kw">if</span> (res.features.length) view.<span class="fn">goTo</span>(res.features);\n'
+    +'  });\n'
+    +'}')
+  +'<div class="box box-k"><p>This ~100-line app uses <strong>every skill from the course</strong>: FeatureLayer, GraphicsLayer, ClassBreaksRenderer, popupTemplate, attribute queries, spatial queries, <code>view.goTo()</code>, and event listeners.</p></div>'
+  +'<div class="divider"></div>'
+  +'<h2>Your Learning Journey</h2>'
+  +'<div class="twrap"><table>'
+  +'<tr><th>Lesson</th><th>Skill</th></tr>'
+  +'<tr><td>1</td><td>What GIS is, layers, coordinates, how web maps work</td></tr>'
+  +'<tr><td>2</td><td>Vector vs Raster, geometry types, map projections, WKID</td></tr>'
+  +'<tr><td>3</td><td>ArcGIS SDK structure, CDN loading, require() modules</td></tr>'
+  +'<tr><td>4</td><td>Creating Map + MapView, basemaps, zoom levels</td></tr>'
+  +'<tr><td>5</td><td>FeatureLayer, GraphicsLayer, Graphic, Symbol types</td></tr>'
+  +'<tr><td>6</td><td>PopupTemplate, hitTest, click events, popup docking</td></tr>'
+  +'<tr><td>7</td><td>Attribute queries (SQL), spatial queries, queryFeatures()</td></tr>'
+  +'<tr><td>8</td><td>SimpleRenderer, UniqueValueRenderer, ClassBreaksRenderer, labels</td></tr>'
+  +'<tr><td>9</td><td>SceneView, camera, ground elevation, 3D extrusion, animation</td></tr>'
+  +'<tr><td>10</td><td>Full app — all skills combined</td></tr>'
+  +'</table></div>'
+  +sumbox([
+    'You\'ve built a complete, real-world GIS web application from scratch',
+    'The app combines <strong>FeatureLayer, renderers, popups, queries, events, and goTo()</strong>',
+    'Next steps: add widgets (Legend, Search), publish your own data, try SceneView',
+    'The ArcGIS API Reference is your permanent companion — keep it bookmarked!',
+    '<strong>Congratulations — you are now an ArcGIS JS developer! 🎉</strong>'
+  ])
+  +'<div class="practice"><div class="ptag">🏆 Final Challenge</div><h2>Make It Your Own</h2>'
+  +'<ol><li>Copy the full code into an HTML file and open it in Chrome. Test the search panel and map-click feature.</li>'
+  +'<li>Replace the hospitals URL with a different ArcGIS Living Atlas dataset (fire stations, schools, parks). Update field names in the renderer and popup.</li>'
+  +'<li>Add a <code>Legend</code> widget — import <code>esri/widgets/Legend</code> and attach it to the view.</li>'
+  +'<li>Swap MapView for SceneView (Lesson 9) — the entire app works in 3D!</li>'
+  +'<li><strong>Deploy it:</strong> Upload to GitHub Pages or Netlify (both free) and share your live GIS app.</li></ol>'
+  +'<div class="pnote">🎉 <strong>Course Complete!</strong> You\'ve gone from zero to building real GIS web apps with ArcGIS Maps SDK for JavaScript. Keep exploring — the GIS world is huge!</div></div>'
+  +cbtn(10);
+}
+
+/* ── init ── */
+goTo(0);
+</script>
+</body>
+</html>
